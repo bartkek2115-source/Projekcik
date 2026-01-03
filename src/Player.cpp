@@ -1,4 +1,6 @@
 #include "Player.h"
+#include "Texture.h"
+#include <SDL.h>
 
 void Player::update(double dt, const Uint8* kb){
     const float speed = 220.f;
@@ -25,6 +27,26 @@ void Player::render(SDL_Renderer* r, int camX, int camY){
     if(frames.empty()) return;
     Texture* t = frames[curFrame];
     if(!t || !t->tex) return;
-    SDL_Rect dst{ (int)(x - camX), (int)(y - camY), width, height };
+
+    // Ensure the texture blends with alpha.
+    SDL_SetTextureBlendMode(t->tex, SDL_BLENDMODE_BLEND);
+
+    int srcW = 0, srcH = 0;
+    SDL_QueryTexture(t->tex, nullptr, nullptr, &srcW, &srcH);
+    if (srcH == 0) return;
+
+    // Use explicit player width/height for drawing so sprite matches physics AABB.
+    // Fallback to texture size if width/height are not set (>0).
+    int destW = (width > 0) ? width : srcW;
+    int destH = (height > 0) ? height : srcH;
+
+    // Render using top-left coordinates (player.x, player.y) so physics and rendering align.
+    SDL_Rect dst{
+        static_cast<int>(x - camX),
+        static_cast<int>(y - camY),
+        destW,
+        destH
+    };
+
     SDL_RenderCopy(r, t->tex, nullptr, &dst);
 }
