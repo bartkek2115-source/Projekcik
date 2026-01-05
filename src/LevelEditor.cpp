@@ -1,29 +1,27 @@
 #include "LevelEditor.h"
+#include <algorithm>
+#include <cmath>
 
-LevelEditor::LevelEditor(Level* l, int w, int h, float scale)
-    : level(l), windowW(w), windowH(h), tileScale(scale) {}
+LevelEditor::LevelEditor(Level* l, int w, int h, float scale, int baseTile)
+    : level(l), windowW(w), windowH(h), tileScale(scale), baseTilePixels(baseTile) {}
 
-void LevelEditor::handleMouse(int mx, int my){
+void LevelEditor::handleMouse(float mx, float my, float camX_editor_f){
     if (!level) return;
-    if (level->rows <= 0 || level->cols <= 0) return;
     if (windowW <= 0 || windowH <= 0) return;
 
-    // compute separate cell width/height and apply tileScale
-    int baseCellW = windowW / level->cols;
-    int baseCellH = windowH / level->rows;
-    if (baseCellW <= 0 || baseCellH <= 0) return;
+    float cellWf = std::max(1.0f, baseTilePixels * tileScale);
+    float cellHf = cellWf;
 
-    int cellW = std::max(1, (int)(baseCellW * tileScale));
-    int cellH = std::max(1, (int)(baseCellH * tileScale));
+    float worldX_editor_f = mx + camX_editor_f;
+    float worldY_editor_f = my;
 
-    // map mouse -> column/row
-    int col = mx / cellW;
-    int row = my / cellH;
+    int col = static_cast<int>(std::floor(worldX_editor_f / cellWf));
+    int row = static_cast<int>(std::floor(worldY_editor_f / cellHf));
 
-    // validate indices and bounds
-    if (row < 0 || row >= level->rows) return;
-    if (col < 0 || col >= level->cols) return;
-    if (row >= (int)level->grid.size() || col >= (int)level->grid[row].size()) return;
+    if (row < 0 || col < 0) return;
 
-    level->grid[row][col] = level->grid[row][col] ? 0 : 1;
+    // Ensure the grid is large enough and cycle the cell
+    // 0 -> 1 -> 2 -> 3 -> 0 (empty -> solid -> damaging -> pickup -> empty)
+    level->ensureCell(row, col);
+    level->grid[row][col] = (level->grid[row][col] + 1) % 4;
 }
