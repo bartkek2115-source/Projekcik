@@ -10,7 +10,7 @@ find_package(ZLIB QUIET)
 find_package(unofficial-minizip CONFIG QUIET)
 find_package(SDL2_ttf CONFIG REQUIRED)
 
-add_executable(SdlExample
+add_executable(projekcik
         src/main.cpp
         src/Texture.cpp
         src/Player.cpp
@@ -18,33 +18,36 @@ add_executable(SdlExample
         src/LevelEditor.cpp
         src/ZipUtil.cpp
         src/Menu.cpp
+        src/MainMenu.cpp
         include/Menu.h
+        include/MainMenu.h
+        src/MainMenu.cpp
 )
 
-target_include_directories(SdlExample PRIVATE include)
+target_include_directories(projekcik PRIVATE include)
 
 file(COPY "${CMAKE_SOURCE_DIR}/assets" DESTINATION "${CMAKE_BINARY_DIR}")
 
 if(TARGET SDL2::SDL2_ttf)
-    target_link_libraries(SdlExample PRIVATE SDL2::SDL2_ttf)
+    target_link_libraries(projekcik PRIVATE SDL2::SDL2_ttf)
 elseif(TARGET SDL2_ttf::SDL2_ttf)
-    target_link_libraries(SdlExample PRIVATE SDL2_ttf::SDL2_ttf)
+    target_link_libraries(projekcik PRIVATE SDL2_ttf::SDL2_ttf)
 elseif(TARGET SDL2_ttf)
-    target_link_libraries(SdlExample PRIVATE SDL2_ttf)
+    target_link_libraries(projekcik PRIVATE SDL2_ttf)
 else()
     set(SDL2_TTF_INCLUDE_DIR "" CACHE PATH "Path to SDL2_ttf include directory (contains SDL_ttf.h)")
     set(SDL2_TTF_LIBRARY "" CACHE FILEPATH "Path to SDL2_ttf library file for your toolchain (.a, .dll.a, or .lib if appropriate)")
 
     if(SDL2_TTF_INCLUDE_DIR AND SDL2_TTF_LIBRARY)
-        target_include_directories(SdlExample PRIVATE ${SDL2_TTF_INCLUDE_DIR})
-        target_link_libraries(SdlExample PRIVATE ${SDL2_TTF_LIBRARY})
+        target_include_directories(projekcik PRIVATE ${SDL2_TTF_INCLUDE_DIR})
+        target_link_libraries(projekcik PRIVATE ${SDL2_TTF_LIBRARY})
     else()
         message(WARNING "SDL2_ttf not found as imported target. Either:\n  * Install SDL2_ttf for your toolchain (e.g. MSYS2: `pacman -S mingw-w64-x86_64-SDL2_ttf`) and run CMake from the MinGW shell or set CLion toolchain to MinGW,\n  * Or set CMake cache variables `SDL2_TTF_INCLUDE_DIR` and `SDL2_TTF_LIBRARY` to the correct paths for your toolchain.")
     endif()
 endif()
 # Link SDL2 core
 if(TARGET SDL2::SDL2)
-    target_link_libraries(SdlExample PRIVATE SDL2::SDL2)
+    target_link_libraries(projekcik PRIVATE SDL2::SDL2)
 else()
     message(FATAL_ERROR "SDL2 CMake target not found.")
 endif()
@@ -59,10 +62,10 @@ elseif(TARGET SDL2_image)
 endif()
 
 if(DEFINED _SDL2_IMAGE_TARGET)
-    target_link_libraries(SdlExample PRIVATE ${_SDL2_IMAGE_TARGET})
+    target_link_libraries(projekcik PRIVATE ${_SDL2_IMAGE_TARGET})
 elseif(DEFINED SDL2_IMAGE_LIBRARIES)
-    target_include_directories(SdlExample PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
-    target_link_libraries(SdlExample PRIVATE ${SDL2_IMAGE_LIBRARIES})
+    target_include_directories(projekcik PRIVATE ${SDL2_IMAGE_INCLUDE_DIRS})
+    target_link_libraries(projekcik PRIVATE ${SDL2_IMAGE_LIBRARIES})
 else()
     message(FATAL_ERROR "SDL2_image not found. Ensure `find_package(SDL2_image CONFIG)` succeeded.")
 endif()
@@ -77,10 +80,10 @@ elseif(TARGET SDL2_ttf)
 endif()
 
 if(DEFINED _SDL2_TTF_TARGET)
-    target_link_libraries(SdlExample PRIVATE ${_SDL2_TTF_TARGET})
+    target_link_libraries(projekcik PRIVATE ${_SDL2_TTF_TARGET})
 else()
     if(TARGET SDL2_ttf)
-        target_link_libraries(SdlExample PRIVATE SDL2_ttf)
+        target_link_libraries(projekcik PRIVATE SDL2_ttf)
     else()
         message(WARNING "SDL2_ttf not found via CONFIG. Menu text rendering will be disabled unless TTF is available at runtime.")
     endif()
@@ -96,10 +99,10 @@ elseif(TARGET SDL2main)
 endif()
 
 if(DEFINED _SDL2_MAIN_TARGET)
-    target_link_libraries(SdlExample PRIVATE ${_SDL2_MAIN_TARGET})
+    target_link_libraries(projekcik PRIVATE ${_SDL2_MAIN_TARGET})
 else()
     # Define SDL_MAIN_HANDLED so user's main is used directly if SDL2main is missing
-    target_compile_definitions(SdlExample PRIVATE SDL_MAIN_HANDLED)
+    target_compile_definitions(projekcik PRIVATE SDL_MAIN_HANDLED)
     message(WARNING "SDL2main target not found. Defining SDL_MAIN_HANDLED to use application main().")
 endif()
 
@@ -123,19 +126,19 @@ endif()
 
 # Prefer imported target if present
 if(TARGET minizip::minizip)
-    target_link_libraries(SdlExample PRIVATE minizip::minizip)
+    target_link_libraries(projekcik PRIVATE minizip::minizip)
 elseif(TARGET minizip)
-    target_link_libraries(SdlExample PRIVATE minizip)
+    target_link_libraries(projekcik PRIVATE minizip)
 elseif(TARGET minizip-ng::minizip-ng)
-    target_link_libraries(SdlExample PRIVATE minizip-ng::minizip-ng)
+    target_link_libraries(projekcik PRIVATE minizip-ng::minizip-ng)
 elseif(TARGET minizip-ng)
-    target_link_libraries(SdlExample PRIVATE minizip-ng)
+    target_link_libraries(projekcik PRIVATE minizip-ng)
 elseif(TARGET unofficial::minizip)
-    target_link_libraries(SdlExample PRIVATE unofficial::minizip)
+    target_link_libraries(projekcik PRIVATE unofficial::minizip)
 elseif(TARGET unofficial-minizip::unofficial-minizip)
-    target_link_libraries(SdlExample PRIVATE unofficial-minizip::unofficial-minizip)
+    target_link_libraries(projekcik PRIVATE unofficial-minizip::unofficial-minizip)
 elseif(TARGET unofficial-minizip)
-    target_link_libraries(SdlExample PRIVATE unofficial-minizip)
+    target_link_libraries(projekcik PRIVATE unofficial-minizip)
 else()
     # fallback: look in vcpkg installed layout if _vcpkg_root/VCPKG_TARGET_TRIPLET are set
     if(DEFINED _vcpkg_root AND _vcpkg_root)
@@ -145,11 +148,11 @@ else()
         find_library(MINIZIP_LIBRARY NAMES minizip minizip-static minizip64 unofficial-minizip HINTS "${_vcpkg_lib}")
         find_library(ZLIB_LIBRARY NAMES zlib zlibstatic HINTS "${_vcpkg_lib}")
         if(MINIZIP_INCLUDE_DIR AND MINIZIP_LIBRARY)
-            target_include_directories(SdlExample PRIVATE ${MINIZIP_INCLUDE_DIR})
+            target_include_directories(projekcik PRIVATE ${MINIZIP_INCLUDE_DIR})
             if(ZLIB_LIBRARY)
-                target_link_libraries(SdlExample PRIVATE ${MINIZIP_LIBRARY} ${ZLIB_LIBRARY})
+                target_link_libraries(projekcik PRIVATE ${MINIZIP_LIBRARY} ${ZLIB_LIBRARY})
             else()
-                target_link_libraries(SdlExample PRIVATE ${MINIZIP_LIBRARY})
+                target_link_libraries(projekcik PRIVATE ${MINIZIP_LIBRARY})
             endif()
         else()
             message(WARNING "minizip not found under vcpkg root ${_vcpkg_root}. Run:\n  cd ${_vcpkg_root} && ./vcpkg install minizip:${VCPKG_TARGET_TRIPLET}\nOr set MINIZIP_INCLUDE_DIR and MINIZIP_LIBRARY manually.")
@@ -161,14 +164,14 @@ endif()
 
 # zlib
 if(TARGET ZLIB::ZLIB)
-    target_link_libraries(SdlExample PRIVATE ZLIB::ZLIB)
+    target_link_libraries(projekcik PRIVATE ZLIB::ZLIB)
 elseif(DEFINED ZLIB_LIBRARIES)
-    target_link_libraries(SdlExample PRIVATE ${ZLIB_LIBRARIES})
+    target_link_libraries(projekcik PRIVATE ${ZLIB_LIBRARIES})
 endif()
 
 # Recommended: enable warnings
 if(MSVC)
-    target_compile_options(SdlExample PRIVATE /W4 /permissive-)
+    target_compile_options(projekcik PRIVATE /W4 /permissive-)
 else()
-    target_compile_options(SdlExample PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(projekcik PRIVATE -Wall -Wextra -Wpedantic)
 endif()
